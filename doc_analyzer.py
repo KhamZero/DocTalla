@@ -1,17 +1,21 @@
 import oletools
+from pathlib import Path
 from oletools.olevba import VBA_Parser, TYPE_OLE, TYPE_OpenXML, TYPE_Word2003_XML, TYPE_MHTML
 
 
 def main():
-    filename = readfile()
+    filename = readfile_from_documents()
     checkfile(filename)
     macros = extract_macros(filename)  # Возвращает все входящие в файл макросы
     print(macros)
 
 
-def readfile():
+def readfile_from_documents():
     filename = input("Input file name to analysis: ")
-    return(filename)
+    base_path = Path(__file__).parent
+    directory_path = (base_path / "documents").resolve()
+    file_path = Path(directory_path, filename)
+    return(file_path)
 
 
 def checkfile(filename):
@@ -31,7 +35,7 @@ def extract_macros(filename):
         print('OLE stream  :', stream_path)
         print('VBA filename:', vba_filename)
         print('- '*39)
-        print(vba_code)  # Все это не нужно,оставим только return
+        print(vba_code)  # Все это не нужно, оставим только return
         return vba_code
 
 
