@@ -1,52 +1,183 @@
-import oletools
+"""Analyzer layer of Project."""
 from pathlib import Path
-from oletools.olevba import VBA_Parser, TYPE_OLE, TYPE_OpenXML, TYPE_Word2003_XML, TYPE_MHTML
+from oletools.olevba import VBA_Parser
+
+
+class Report:
+    """
+    Create Report from macros information.
+
+    we have list of info dictionaries of the following structure:
+        {
+            'number': vbaparser.nb_autoexec, 
+            'description': 'Ключевые слова автоматического вызова',
+            'danger': False
+        },
+    """
+
+    def __init__(self, infos):
+        """Initialize Report."""
+        self.infos = infos
+        if not self.infos:
+            self.infos = []
+        self.warnings = self.get_warnings(self.infos)
+        self.dangers = self.get_dangers(self.infos)
+        self.is_danger = self.check_if_danger()
+        self.is_warning = self.check_if_warning()
+
+    def check_if_warning(self):
+        """Return true if warnings detected."""
+        if self.warnings:
+            return True
+        return False
+
+    def check_if_danger(self):
+        """Return true if dangers detected."""
+        if self.dangers:
+            return True
+        return False
+
+    def get_warnings(self, infos):
+        """Return list of warnings."""
+        warnings = []
+        for info in self.infos:
+            if not info["danger"] and info["number"] > 0:
+                warnings.append(info)
+        return warnings
+
+    def get_dangers(self, infos):
+        """Return list of dangers."""
+        dangers = []
+        for info in self.infos:
+            if info["danger"] and info["number"] > 0:
+                dangers.append(info)
+        return dangers
+
+    def print_warnings(self):
+        """Print warnings."""
+        if not self.warnings:
+            return
+        print("""Обнаружен подозрительный код!""")
+        print('- '*39)
+        for warning in self.warnings:
+            print(f"""{warning["description"]} : {warning["number"]}""")
+
+    def print_danger(self):
+        """Print dangers."""
+        if not self.dangers:
+            return
+        print("""Обнаружен вредоносный код!""")
+        print('- '*39)
+        for danger in self.dangers:
+            print(f"""{danger["description"]} : {danger["number"]}""")
+    
+    def get_result(self):
+        """Returns string with report result."""
+        report_result = "Вирус не найден!"
+
+        if self.is_warning:
+            report_result = "Вирус не найден! Но обнаружен подозрительный код!"
+
+        if self.is_danger:
+            report_result = "Найден вирус! Опасность!!! Азазаза!!!"
+
+        return report_result
+
+
+class FileManager:
+    """Manage files and data of the program."""
+
+    def __init__(self, file_name):
+        """Initialize FileManager."""
+        self.file_name = file_name
+
+    def readfile_from_documents(self):
+        """Return file path from directory and input."""
+        base_path = Path(__file__).parent
+        directory_path = (base_path / "documents").resolve()
+        file_path = Path(directory_path, self.file_name)
+        return(file_path)
+
+
+class FileAnalytics:
+    """File analytics class."""
+
+    def __init__(self, file_path):
+        """Initialize FileAnalytics."""
+        self.file_path = file_path
+        self.has_macros = self.is_file_has_VBA_macros()
+        self.macros_infos = self.get_macros_infos()
+
+    def is_file_has_VBA_macros(self):
+        """Check if file has VBA macros."""
+        file_path = self.file_path
+        vbaparser = VBA_Parser(file_path)
+        print('The file type is "%s"' % (vbaparser.type))
+        if vbaparser.detect_vba_macros():
+            print("VBA Macros найден!")
+            print('- '*39)
+            return True
+        else:
+            print("VBA Macros не найден!")
+            print('- '*39)
+            return False
+
+    def get_macros_infos(self):
+        """Check file macroses for suspisious behaviour."""
+        if not self.has_macros:
+            return None
+        vbaparser = VBA_Parser(self.file_path)
+        vbaparser.analyze_macros()
+
+        # obfuscated vba and autoexec danger
+        autoexec_and_vba = 0
+        if vbaparser.nb_autoexec > 0 and vbaparser.nb_vbastrings > 0:
+            autoexec_and_vba = vbaparser.nb_vbastrings
+
+        # obfuscated Base64 and autoexec danger
+        autoexec_and_base64 = 0
+        if vbaparser.nb_autoexec > 0 and vbaparser.nb_base64strings > 0:
+            autoexec_and_base64 = vbaparser.nb_base64strings
+
+        # obfuscated HEX and autoexec danger
+        autoexec_and_HEX = 0
+        if vbaparser.nb_autoexec > 0 and vbaparser.nb_hexstrings > 0:
+            autoexec_and_HEX = vbaparser.nb_hexstrings
+
+        macros_infos = [
+            {'number': vbaparser.nb_autoexec,
+                'description': 'Ключевые слова автоматического вызова', 'danger': False},
+            {'number': autoexec_and_HEX,
+                'description': 'Автоматический вызов шеснадцатиричных обфусцированных строк', 'danger': False},
+            {'number': vbaparser.nb_vbastrings,
+                'description': 'VBA обфусцированные строки', 'danger': False},
+            {'number': vbaparser.nb_suspicious,
+                'description': 'Подозрительные ключевые слова', 'danger': False},
+            {'number': autoexec_and_vba,
+                'description': 'Автоматический вызов обфусцированного кода', 'danger': True},
+            {'number': vbaparser.nb_dridexstrings,
+                'description': 'Dridex обфусцированные строки', 'danger': True},
+            {'number': autoexec_and_base64,
+                'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True},
+        ]
+        
+        vbaparser.close()
+        return macros_infos
 
 
 def main():
-    filename = readfile_from_documents()
-    if not is_file_has_VBA_macros(filename):
-        return 
-    code_items = get_items(filename)  # Возвращает словарь с данными о входящих в документ макросах
-    print(code_items)
-    
-    
-
-def readfile_from_documents():
-    """Return file path from directory and input."""
+    """Entry of the script."""
     filename = input("Input file name to analysis: ")
-    base_path = Path(__file__).parent
-    directory_path = (base_path / "documents").resolve()
-    file_path = Path(directory_path, filename)
-    return(file_path)
 
+    filemanager = FileManager(filename)
+    file_path = filemanager.readfile_from_documents()
 
-def is_file_has_VBA_macros(filename):
-    vbaparser = VBA_Parser(filename)
-    print('The file type is "%s"' % (vbaparser.type))
-    if vbaparser.detect_vba_macros():
-        print("VBA Macros найден!")
-        print('- '*39)
-        return True
-    else:
-        print("VBA Macros не найден!")
-        print('- '*39)
-        return False
+    analyzer = FileAnalytics(file_path)
+    analyze_results = analyzer.macros_infos
 
-
-def get_items(filename):
-    vbaparser = VBA_Parser(filename)
-    vbaparser.analyze_macros()
-    print ('Ключевые слова автоматического вызова: %d' % vbaparser.nb_autoexec)
-    print ('Подозрительные ключевые слова: %d' % vbaparser.nb_suspicious)
-    print ('IOCs: %d' % vbaparser.nb_iocs)
-    print ('Шестнадцатеричные обфусцированные строки: %d' % vbaparser.nb_hexstrings)
-    print ('Base64 обфусцированные строки: %d' % vbaparser.nb_base64strings)
-    print ('Dridex обфусцированные строки: %d' % vbaparser.nb_dridexstrings)
-    print ('VBA обфусцированные строки: %d' % vbaparser.nb_vbastrings)
-    print('- '*39)
-    return({'AutoExec': vbaparser.nb_autoexec, 'Dridex': vbaparser.nb_dridexstrings, 'VBA': vbaparser.nb_vbastrings})
-    
+    report = Report(analyze_results)
+    report.print_warnings()
+    report.print_danger()
 
 
 if __name__ == "__main__":
