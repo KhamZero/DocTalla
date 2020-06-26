@@ -79,7 +79,7 @@ class Report:
             report_result = "Вирус не найден! Но обнаружен подозрительный код!"
 
         if self.is_danger:
-            report_result = "Найден вирус! Опасность!!! Азазаза!!!"
+            report_result = "Найден вирус!"
 
         return report_result
 
