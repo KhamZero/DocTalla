@@ -44,8 +44,7 @@ class ConsoleUi:
         self.scrolled_text.tag_config('DEBUG', foreground='gray')
         self.scrolled_text.tag_config('WARNING', foreground='orange')
         self.scrolled_text.tag_config('ERROR', foreground='red')
-        self.scrolled_text.tag_config(
-            'CRITICAL', foreground='red', underline=1)
+        self.scrolled_text.tag_config('CRITICAL', foreground='red', underline=1)
         # Create a logging handler using a queue
         self.log_queue = queue.Queue()
         self.queue_handler = QueueHandler(self.log_queue)
@@ -89,7 +88,7 @@ class FormUi:
 
         # TODO add macros parser code
         Button(self.frame, text="Посмотреть VBA код файла",
-            command=self.extract_macros).grid(column=0, row=3, sticky=W, padx=10, pady=10)
+            command=self.extract_vba).grid(column=0, row=3, sticky=W, padx=10, pady=10)
 
     def select_file(self):
         """Run dialog to select file."""
@@ -110,6 +109,7 @@ class FormUi:
         file_path = self.select_file()
 
         analyzer = FileAnalytics(file_path)
+        # VBA_analyzer = analyzer.is_file_has_VBA_macros()
         analyze_results = analyzer.macros_infos
 
         report = Report(analyze_results)
@@ -149,8 +149,12 @@ class FormUi:
             logger.log(logging.INFO, report_result)
             logger.log(logging.DEBUG, '- '*39)
         
-    def extract_macros(self):
-        pass
+    def extract_vba(self):
+        file_path = self.select_file()
+        vba = FileAnalytics(file_path)
+        vba_code = vba.vba_code
+        vba_code = Path(file_path).name + ":\n\n" + vba_code
+        logger.log(logging.DEBUG, vba_code)
 
 class App:
     """Return main application."""
