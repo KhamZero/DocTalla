@@ -1,6 +1,7 @@
 """Analyzer layer of Project."""
 from pathlib import Path
 from oletools.olevba import VBA_Parser
+import pathlib
 
 
 class Report:
@@ -84,21 +85,6 @@ class Report:
         return report_result
 
 
-class FileManager:
-    """Manage files and data of the program."""
-
-    def __init__(self, file_name):
-        """Initialize FileManager."""
-        self.file_name = file_name
-
-    def readfile_from_documents(self):
-        """Return file path from directory and input."""
-        base_path = Path(__file__).parent
-        directory_path = (base_path / "documents").resolve()
-        file_path = Path(directory_path, self.file_name)
-        return(file_path)
-
-
 class FileAnalytics:
     """File analytics class."""
 
@@ -165,12 +151,13 @@ class FileAnalytics:
         return macros_infos
 
 
-def main():
-    """Entry of the script."""
-    filename = input("Input file name to analysis: ")
+def check_one_file():
+    """Check one file from documents directory."""
+    file_name = input("Input file name to analysis: ")
 
-    filemanager = FileManager(filename)
-    file_path = filemanager.readfile_from_documents()
+    base_path = Path(__file__).parent
+    directory_path = (base_path / "documents").resolve()
+    file_path = Path(directory_path, file_name)
 
     analyzer = FileAnalytics(file_path)
     analyze_results = analyzer.macros_infos
@@ -178,6 +165,30 @@ def main():
     report = Report(analyze_results)
     report.print_warnings()
     report.print_danger()
+
+
+def check_directory():
+    """Check the directory files."""
+    directoryname = input("Input directory name to analysis: ") # C:\Users\Root\GIT\documents
+    file_paths_in_directory = []
+    for p in pathlib.Path(directoryname).iterdir():
+        if p.is_file():
+            file_paths_in_directory.append(p)
+
+    for file_path in file_paths_in_directory:
+        analyzer = FileAnalytics(file_path)
+        analyze_results = analyzer.macros_infos
+        report = Report(analyze_results)
+        report.print_warnings()
+        report.print_danger()
+
+
+
+def main():
+    """Entry of the script."""
+    check_one_file()
+
+
 
 
 if __name__ == "__main__":
