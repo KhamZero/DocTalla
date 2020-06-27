@@ -106,23 +106,21 @@ class FileAnalytics:
         self.file_path = file_path
         self.has_macros = self.is_file_has_VBA_macros()
         self.macros_infos = self.get_macros_infos()
+        self.vba_code = self.get_vba_code()
+
 
     def is_file_has_VBA_macros(self):
         """Check if file has VBA macros."""
+
         file_path = self.file_path
         vbaparser = VBA_Parser(file_path)
         print('The file type is "%s"' % (vbaparser.type))
-        if vbaparser.detect_vba_macros():
-            print("VBA Macros найден!")
-            print('- '*39)
-            return True
-        else:
-            print("VBA Macros не найден!")
-            print('- '*39)
-            return False
+        return vbaparser.detect_vba_macros()
+
 
     def get_macros_infos(self):
         """Check file macroses for suspisious behaviour."""
+
         if not self.has_macros:
             return None
         vbaparser = VBA_Parser(self.file_path)
@@ -164,6 +162,14 @@ class FileAnalytics:
         return macros_infos
 
 
+    def get_vba_code(self):
+        vbaparser = VBA_Parser(self.file_path)
+        vbaparser.detect_vba_macros()
+        for (filename, stream_path, vba_filename, vba_code) in vbaparser.extract_macros():
+            print(vba_code)
+            return(vba_code)
+
+
 def check_one_file():
     """Check one file from documents directory."""
     file_name = input("Input file name to analysis: ")
@@ -195,6 +201,8 @@ def check_directory():
         report = Report(analyze_results)
         report.print_warnings()
         report.print_danger()
+
+
 
 
 def main():
