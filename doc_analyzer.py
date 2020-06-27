@@ -1,7 +1,6 @@
 """Analyzer layer of Project."""
-from pathlib import Path
 from oletools.olevba import VBA_Parser
-import pathlib
+from pathlib import Path
 
 
 class Report:
@@ -71,9 +70,9 @@ class Report:
         print('- '*39)
         for danger in self.dangers:
             print(f"""{danger["description"]} : {danger["number"]}""")
-    
+
     def get_result(self):
-        """Returns string with report result."""
+        """Return string with report result."""
         report_result = "Вирус не найден!"
 
         if self.is_warning:
@@ -83,6 +82,20 @@ class Report:
             report_result = "Найден вирус!"
 
         return report_result
+
+    def get_warning_message_list(self):
+        warning_list = []
+        for warning in self.warnings:
+            warning_list.append(
+                f"""{warning["description"]} : {warning["number"]}""")
+        return warning_list
+
+    def get_danger_message_list(self):
+        danger_list = []
+        for danger in self.dangers:
+            danger_list.append(
+                f"""{danger["description"]} : {danger["number"]}""")
+        return danger_list
 
 
 class FileAnalytics:
@@ -146,7 +159,7 @@ class FileAnalytics:
             {'number': autoexec_and_base64,
                 'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True},
         ]
-        
+
         vbaparser.close()
         return macros_infos
 
@@ -169,9 +182,10 @@ def check_one_file():
 
 def check_directory():
     """Check the directory files."""
-    directoryname = input("Input directory name to analysis: ") # C:\Users\Root\GIT\documents
+    directoryname = input(
+        "Input directory name to analysis: ")  # C:\Users\Root\GIT\documents
     file_paths_in_directory = []
-    for p in pathlib.Path(directoryname).iterdir():
+    for p in Path(directoryname).iterdir():
         if p.is_file():
             file_paths_in_directory.append(p)
 
@@ -183,12 +197,9 @@ def check_directory():
         report.print_danger()
 
 
-
 def main():
     """Entry of the script."""
     check_one_file()
-
-
 
 
 if __name__ == "__main__":
