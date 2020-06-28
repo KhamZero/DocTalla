@@ -1,1 +1,2 @@
 oletools==0.55
+xlutils==2.0

@@ -2,9 +2,10 @@
 import queue
 import tkinter as tk
 from tkinter import ttk, VERTICAL, HORIZONTAL, N, S, E, W
-from tkinter import filedialog, Button, messagebox
+from tkinter import filedialog, Button
 import os
 from doc_analyzer import Report, FileAnalytics
+from doc_cleaner import DocCleaner
 from pathlib import Path
 import logging
 from tkinter.scrolledtext import ScrolledText
@@ -44,7 +45,8 @@ class ConsoleUi:
         self.scrolled_text.tag_config('DEBUG', foreground='gray')
         self.scrolled_text.tag_config('WARNING', foreground='orange')
         self.scrolled_text.tag_config('ERROR', foreground='red')
-        self.scrolled_text.tag_config('CRITICAL', foreground='red', underline=1)
+        self.scrolled_text.tag_config(
+            'CRITICAL', foreground='red', underline=1)
         # Create a logging handler using a queue
         self.log_queue = queue.Queue()
         self.queue_handler = QueueHandler(self.log_queue)
@@ -80,15 +82,21 @@ class FormUi:
     def __init__(self, frame):
         self.frame = frame
         # Create a combobbox to select the scans
-        Button(self.frame, text="Выбрать файл для анализа", command=self.analyze_file).grid(
+        Button(
+            self.frame, text="Выбрать файл для анализа", command=self.analyze_file).grid(
             column=0, row=1, sticky=W, padx=10, pady=10)
 
-        Button(self.frame, text="Выберите директорию для анализа",
+        Button(
+            self.frame, text="Выберите директорию для анализа",
             command=self.analyze_directory).grid(column=0, row=2, sticky=W, padx=10, pady=10)
 
-        # TODO add macros parser code
-        Button(self.frame, text="Посмотреть VBA код файла",
+        Button(
+            self.frame, text="Посмотреть VBA код файла",
             command=self.extract_vba).grid(column=0, row=3, sticky=W, padx=10, pady=10)
+
+        Button(
+            self.frame, text="Очистить файл",
+            command=self.clean_file).grid(column=0, row=4, sticky=W, padx=10, pady=10)
 
     def select_file(self):
         """Run dialog to select file."""
@@ -117,12 +125,10 @@ class FormUi:
 
         for warning in report.get_warning_message_list():
             logger.log(logging.WARNING, warning)
-            
 
         for danger in report.get_danger_message_list():
             logger.log(logging.ERROR, danger)
-            
-        
+
         logger.log(logging.INFO, report_result)
         logger.log(logging.DEBUG, '- '*39)
 
@@ -138,24 +144,37 @@ class FormUi:
             analyzer = FileAnalytics(file_path)
             analyze_results = analyzer.macros_infos
             report = Report(analyze_results)
-            
+
             for warning in report.get_warning_message_list():
                 logger.log(logging.WARNING, warning)
 
             for danger in report.get_danger_message_list():
                 logger.log(logging.ERROR, danger)
-            
+
             report_result = Path(file_path).name + " " + report.get_result()
             logger.log(logging.INFO, report_result)
             logger.log(logging.DEBUG, '- '*39)
-        
+
     def extract_vba(self):
+        """Extract vba macros from file."""
         file_path = self.select_file()
         vba = FileAnalytics(file_path)
         vba_code = vba.vba_code
 
         vba = Path(file_path).name + ":\n\n" + vba_code
         logger.log(logging.DEBUG, vba)
+
+    def clean_file(self):
+        """Analyze the file."""
+        file_path = self.select_file()
+
+        cleaner = DocCleaner(file_path)
+        clean_results = cleaner.results
+
+        report_result = Path(file_path).name + " " + clean_results
+        logger.log(logging.ERROR, report_result)
+        logger.log(logging.DEBUG, '- '*39)
+
 
 class App:
     """Return main application."""
