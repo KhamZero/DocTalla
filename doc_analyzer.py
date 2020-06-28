@@ -1,4 +1,5 @@
 """Analyzer layer of Project."""
+from oletools import olevba
 from oletools.olevba import VBA_Parser
 from pathlib import Path
 
@@ -143,19 +144,19 @@ class FileAnalytics:
 
         macros_infos = [
             {'number': vbaparser.nb_autoexec,
-                'description': 'Ключевые слова автоматического вызова', 'danger': False},
+                'description': 'Ключевые слова автоматического вызова', 'danger': False, 'fun': olevba.detect_autoexec},
             {'number': autoexec_and_HEX,
-                'description': 'Автоматический вызов шеснадцатиричных обфусцированных строк', 'danger': False},
+                'description': 'Автоматический вызов шеснадцатиричных обфусцированных строк', 'danger': False, 'fun': olevba.detect_hex_strings},
             {'number': vbaparser.nb_vbastrings,
-                'description': 'VBA обфусцированные строки', 'danger': False},
+                'description': 'VBA обфусцированные строки', 'danger': False, 'fun': olevba.detect_vba_strings},
             {'number': vbaparser.nb_suspicious,
-                'description': 'Подозрительные ключевые слова', 'danger': False},
+                'description': 'Подозрительные ключевые слова', 'danger': False, 'fun': olevba.detect_suspicious},
             {'number': autoexec_and_vba,
-                'description': 'Автоматический вызов обфусцированного кода', 'danger': True},
+                'description': 'Автоматический вызов обфусцированного кода', 'danger': True, 'fun': olevba.detect_vba_strings},
             {'number': vbaparser.nb_dridexstrings,
-                'description': 'Dridex обфусцированные строки', 'danger': True},
+                'description': 'Dridex обфусцированные строки', 'danger': True, 'fun': olevba.detect_dridex_strings},
             {'number': autoexec_and_base64,
-                'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True},
+                'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True, 'fun': olevba.detect_base64_strings},
         ]
 
         vbaparser.close()
@@ -165,9 +166,23 @@ class FileAnalytics:
     def get_vba_code(self):
         vbaparser = VBA_Parser(self.file_path)
         vbaparser.detect_vba_macros()
+        code_list = list()
+
         for (filename, stream_path, vba_filename, vba_code) in vbaparser.extract_macros():
-            print(vba_code)
-            return(vba_code)
+            code_list.append(vba_code)
+            code = vba_code
+
+        report_vba = code_list[0]
+        macros_infos = self.macros_infos
+        for i in range(len(macros_infos)):
+            if macros_infos[i]['number'] > 0:
+                macro_code = macros_infos[i]['fun'](code)
+                for i in macro_code:
+                    for j in i:
+                        report_vba += j
+
+
+        return report_vba
 
 
 def check_one_file():
