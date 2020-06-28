@@ -163,6 +163,7 @@ class FormUi:
 
         vba = Path(file_path).name + ":\n\n" + vba_code
         logger.log(logging.DEBUG, vba)
+        logger.log(logging.DEBUG, '- '*39)
 
     def clean_file(self):
         """Analyze the file."""
