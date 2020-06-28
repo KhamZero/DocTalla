@@ -153,8 +153,9 @@ class FormUi:
         file_path = self.select_file()
         vba = FileAnalytics(file_path)
         vba_code = vba.vba_code
-        vba_code = Path(file_path).name + ":\n\n" + vba_code
-        logger.log(logging.DEBUG, vba_code)
+
+        vba = Path(file_path).name + ":\n\n" + vba_code
+        logger.log(logging.DEBUG, vba)
 
 class App:
     """Return main application."""

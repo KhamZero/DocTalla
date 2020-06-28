@@ -112,16 +112,16 @@ class FileAnalytics:
 
     def is_file_has_VBA_macros(self):
         """Check if file has VBA macros."""
-
         file_path = self.file_path
         vbaparser = VBA_Parser(file_path)
         print('The file type is "%s"' % (vbaparser.type))
-        return vbaparser.detect_vba_macros()
+        report = vbaparser.detect_vba_macros()
+        vbaparser.close()
+        return report
 
 
     def get_macros_infos(self):
         """Check file macroses for suspisious behaviour."""
-
         if not self.has_macros:
             return None
         vbaparser = VBA_Parser(self.file_path)
@@ -164,6 +164,10 @@ class FileAnalytics:
 
 
     def get_vba_code(self):
+        """Code analysis for malicious parts. Returns malicious code, if any."""
+        if not self.has_macros:
+            return "Документ не содержит макросов!"
+
         vbaparser = VBA_Parser(self.file_path)
         vbaparser.detect_vba_macros()
         code_list = list()
@@ -181,7 +185,7 @@ class FileAnalytics:
                     for j in i:
                         report_vba += j
 
-
+        vbaparser.close()
         return report_vba
 
 
@@ -203,8 +207,7 @@ def check_one_file():
 
 def check_directory():
     """Check the directory files."""
-    directoryname = input(
-        "Input directory name to analysis: ")  # C:\Users\Root\GIT\documents
+    directoryname = input("Input directory name to analysis: ")
     file_paths_in_directory = []
     for p in Path(directoryname).iterdir():
         if p.is_file():
