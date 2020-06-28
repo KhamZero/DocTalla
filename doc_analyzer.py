@@ -144,19 +144,19 @@ class FileAnalytics:
 
         macros_infos = [
             {'number': vbaparser.nb_autoexec,
-                'description': 'Ключевые слова автоматического вызова', 'danger': False, 'fun': olevba.detect_autoexec},
+                'description': 'Ключевые слова автоматического вызова', 'danger': False, 'function': olevba.detect_autoexec},
             {'number': autoexec_and_HEX,
-                'description': 'Автоматический вызов шеснадцатиричных обфусцированных строк', 'danger': False, 'fun': olevba.detect_hex_strings},
+                'description': 'Автоматический вызов шеснадцатиричных обфусцированных строк', 'danger': False, 'function': olevba.detect_hex_strings},
             {'number': vbaparser.nb_vbastrings,
-                'description': 'VBA обфусцированные строки', 'danger': False, 'fun': olevba.detect_vba_strings},
+                'description': 'VBA обфусцированные строки', 'danger': False, 'function': olevba.detect_vba_strings},
             {'number': vbaparser.nb_suspicious,
-                'description': 'Подозрительные ключевые слова', 'danger': False, 'fun': olevba.detect_suspicious},
+                'description': 'Подозрительные ключевые слова', 'danger': False, 'function': olevba.detect_suspicious},
             {'number': autoexec_and_vba,
-                'description': 'Автоматический вызов обфусцированного кода', 'danger': True, 'fun': olevba.detect_vba_strings},
+                'description': 'Автоматический вызов обфусцированного кода', 'danger': True, 'function': olevba.detect_vba_strings},
             {'number': vbaparser.nb_dridexstrings,
-                'description': 'Dridex обфусцированные строки', 'danger': True, 'fun': olevba.detect_dridex_strings},
+                'description': 'Dridex обфусцированные строки', 'danger': True, 'function': olevba.detect_dridex_strings},
             {'number': autoexec_and_base64,
-                'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True, 'fun': olevba.detect_base64_strings},
+                'description': 'Автоматический вызов Base64 обфусцированных строк', 'danger': True, 'function': olevba.detect_base64_strings},
         ]
 
         vbaparser.close()
@@ -176,7 +176,7 @@ class FileAnalytics:
         macros_infos = self.macros_infos
         for i in range(len(macros_infos)):
             if macros_infos[i]['number'] > 0:
-                macro_code = macros_infos[i]['fun'](code)
+                macro_code = macros_infos[i]['function'](code)
                 for i in macro_code:
                     for j in i:
                         report_vba += j
