@@ -5,6 +5,7 @@ DocTalla - это программа для анализа файлов OLE и O
 
 
 ## Зависимости
+
 В данной разработке использован язык программирования Python, а также сторонние его библиотеки: [Tkinter](https://docs.python.org/3/library/tkinter.html), [Pathlib](https://docs.python.org/3/library/pathlib.html), [Oletools](https://github.com/decalage2/oletools). Неопсредственно для анализа электронных документов был использован инструмент библиотеки Oletools - [Olevba](https://github.com/decalage2/oletools/wiki/olevba).
 
 ## Установка
